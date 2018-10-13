@@ -2,16 +2,19 @@
 
 from gazebo_robot import *
 import rospy
+import numpy as np
+from math import pi
 
 if __name__ == '__main__':
-    try:
+	try:
 
-        turtlebot = gazebo_robot("turtlebot_move", "turtlebot", -10.0, 0.0, 0.0)
-    	rospy.sleep(3)
+		turtlebot = gazebo_robot("turtlebot_move", "turtlebot", 0.0, 0.0, 0.0)
+		turtlebot.getModelState()
 
-    	duration = rospy.Duration(0.5)
-    	turtlebot.applyJointEffort('turtlebot::create::left_wheel', 1, duration)
-    	turtlebot.applyJointEffort('turtlebot::create::right_wheel', 1, duration)
+		rospy.sleep(1)
 
-    except rospy.ROSInterruptException:
-        print("exception occured")
+		turtlebot.setPosition(5, 5, 10)
+		turtlebot.getModelState()
+
+	except rospy.ROSInterruptException:
+		print("exception occured")
