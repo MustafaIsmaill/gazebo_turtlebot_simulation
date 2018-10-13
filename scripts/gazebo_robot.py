@@ -5,7 +5,7 @@ import rospy
 
 class gazebo_robot:
 
-	def __init__(self, name, X, Y, Z): #initial robot conditions
+	def __init__(self, node_name, name, X, Y, Z): #initial robot conditions
 
 		self._name = name
 		self._x = X
@@ -15,7 +15,7 @@ class gazebo_robot:
 		self._pitch = 0.0
 		self._yaw = 0.0
 
-		rospy.init_node('turtlebot_sim', anonymous=True)
+		rospy.init_node(node_name, anonymous=True)
 
 		self._modelStateSetter = rospy.Publisher('gazebo/set_model_state', ModelState, queue_size=10, latch=True)
 		rospy.sleep(1)
