@@ -19,7 +19,9 @@ class gazebo_robot:
 		self._z_theta = Z_THETA
 		self._yaw = yaw
 
-		rospy.init_node(self._node_name, anonymous=True)
+		rospy.init_node(self._node_name, anonymous=False)
+
+		self._rate = rospy.Rate(10)
 
 		self._modelStateSetter = rospy.Publisher('gazebo/set_model_state', ModelState, queue_size=10, latch=True)
 		rospy.sleep(1)
@@ -75,39 +77,68 @@ class gazebo_robot:
 
 	def setVelocity(self, x_dot, y_dot, yaw):
 
+		self._msg.pose.position.x = self._x
+		self._msg.pose.position.y = self._y
+		self._msg.pose.orientation.z = self._z_theta
+		
 		self._msg.twist.linear.x = x_dot
 		self._msg.twist.linear.y = y_dot
 		self._msg.twist.angular.z = yaw
 
 		self._modelStateSetter.publish(self._msg)
 
-	def getDistance(self, goal_x, goal_y):
+	def calcDistance(self, goal_x, goal_y):
 
 		distance = sqrt(pow((goal_x - self._x), 2) + pow((goal_y - self._y), 2))
+		print(distance)
 		return distance
 
-	def getModelState(self):
+	def calcLinearVelocity(self, goal_x, goal_y, constant=3.0):
+
+		linearVelocity = constant * self.calcDistance(goal_x, goal_y)
+
+		return linearVelocity
+
+	def calcSteeringAngle(self, goal_x, goal_y):
+
+		steeringAngle = atan2(goal_y - self._y, goal_x - self._x)
+
+		return steeringAngle
+
+	def calcAngularVelocity(self, goal_x, goal_y, constant=6.0):
+
+		angularVelocity = constant * (self.calcSteeringAngle(goal_x, goal_y) - self._z_theta)
+
+		return angularVelocity
+
+	def updateModelState(self):
 
 		state = self._modelStateGetter(self._name, "world")
-		print(state)
+
+		self._x = state.pose.position.x
+		self._y = state.pose.position.y
+		self._z_theta = state.pose.orientation.z
 
 	def goToGoal(self):
-        
-		rospy.sleep(2)
-
+	    
 		goal_x = input("Input x goal:")
 		goal_y = input("Input y goal:")
-		distance_tolerance = 1
+		distance_tolerance = 0.7
 
-		while getDistance(goal_x, goal_y) >= distance_tolerance:
+		while self.calcDistance(goal_x, goal_y) >= distance_tolerance:
 
-		    x_velocity = 1.5 * self.getDistance(goal_x, goal_y)
-		    y_velocity = 1.5 * self.getDistance(goal_x, goal_y)
-		    z_velocity = 0
+			x_velocity = self.calcLinearVelocity(goal_x, goal_y)
+			y_velocity = 0
+			z_velocity = 0
 
-		    yaw_velocity = 4 * (atan2(goal_y - self._y, goal_x - self._x) - self._yaw)
+			yaw_velocity = self.calcAngularVelocity(goal_x, goal_y)
 
-		    self.setVelocity(x_velocity, y_velocity, yaw_velocity)
+			self.setVelocity(x_velocity, y_velocity, yaw_velocity)
+
+			self._rate.sleep()
+			self.updateModelState()
+
+		print("Reached goal")
 
 		x_velocity = 0
 		y_velocity = 0 

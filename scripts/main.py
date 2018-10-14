@@ -11,7 +11,11 @@ if __name__ == '__main__':
 		turtlebot = gazebo_robot("turtlebot_move", "turtlebot", 0.0, 0.0, 0.0, 0.0)
 		rospy.sleep(1)
 
+		# turtlebot.getModelState()
+
 		turtlebot.goToGoal()
+
+		# turtlebot.setVelocity(1.478, 0, 0)
 
 	except rospy.ROSInterruptException:
 		print("exception occured")
